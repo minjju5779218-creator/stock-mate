@@ -18,8 +18,8 @@
                         sans: ['"Noto Sans KR"', 'sans-serif'],
                     },
                     colors: {
-                        primary: '#1F2937', // Gray-800 (심플한 다크 그레이)
-                        secondary: '#6B7280', // Gray-500 (서브 텍스트용)
+                        primary: '#1F2937', 
+                        secondary: '#6B7280', 
                     }
                 }
             }
@@ -91,9 +91,7 @@
             width: 100%;
         }
 
-        /* 드래그 앤 드롭 표시 스타일 (순위 변경용 - 여기서는 셀렉트 박스로 대체하여 사용성을 높임) */
-        
-        /* 스크롤바 숨기기 (모바일 뷰 최적화) */
+        /* 스크롤바 숨기기 */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -108,23 +106,43 @@
             background: #a8a8a8; 
         }
 
-        /* iOS 하단 안전 영역(Safe Area) 대응 - 홈 인디케이터에 가려지지 않도록 */
         .safe-area-pb {
             padding-bottom: max(1rem, env(safe-area-inset-bottom));
+        }
+
+        /* PC에서도 스마트폰 비율(세로가 긴 직사각형)로 보이도록 고정 */
+        @media (min-width: 640px) {
+            .mobile-frame-container {
+                width: 100%;
+                max-width: 410px;
+                height: 852px; /* 아이폰 Pro Max 기준 비율 */
+                max-height: 90vh;
+                border-radius: 2.5rem;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                border: 8px solid #1f2937; /* 스마트폰 외곽 테두리 느낌 */
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 h-[100dvh] overflow-hidden flex flex-col sm:items-center sm:justify-center">
 
-    <!-- 모바일에서는 전체 화면 꽉 차게, PC/태블릿에서는 둥근 카드 형태로 고정 -->
-    <div class="bg-white w-full sm:max-w-md flex flex-col h-full sm:h-auto sm:max-h-[90dvh] sm:rounded-2xl sm:shadow-sm sm:border border-gray-200 relative">
+    <!-- 모바일 전체 화면, PC 감성 스마트폰 프레임 UI -->
+    <div class="mobile-frame-container bg-white w-full flex flex-col h-full relative">
         
-        <!-- 헤더 영역: 날짜, 제목 및 진행률 (shrink-0으로 줄어들지 않게 고정) -->
-        <header class="shrink-0 bg-white p-5 sm:p-6 pb-4 border-b border-gray-100 relative">
-            <div id="current-date" class="text-sm text-gray-500 font-medium mb-1 tracking-tight"></div>
-            <h1 class="text-2xl font-bold text-gray-900 mb-4">오늘 해야 할 일</h1>
+        <!-- 헤더 영역: 날짜, 제목 및 퍼센트, 통계보기 버튼 (상단 잘림 방지 pt-6 적용) -->
+        <header class="shrink-0 bg-white pt-6 px-5 sm:px-6 pb-4 border-b border-gray-100 relative">
+            <div class="flex justify-between items-center mb-1">
+                <div id="current-date" class="text-sm text-gray-500 font-medium tracking-tight"></div>
+                <button id="btn-open-stats" class="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1 font-medium">
+                    <i class="fa-solid fa-chart-simple"></i> 날짜별 통계
+                </button>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 mb-3">오늘 해야 할 일</h1>
             
-            <div class="flex justify-between items-end mt-2 mb-4">
+            <div class="flex justify-between items-end mt-1 mb-3">
                 <div>
                     <span id="completed-count" class="text-3xl font-bold text-gray-900">0</span>
                     <span class="text-gray-300 mx-1">/</span>
@@ -136,36 +154,39 @@
                 </div>
             </div>
 
-            <!-- 프로그레스 바 (심플 모노톤) -->
+            <!-- 프로그레스 바 -->
             <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div id="progress-bar" class="h-full bg-gray-800 transition-all duration-500 ease-out" style="width: 0%;"></div>
             </div>
         </header>
 
-        <!-- 메인 목록 영역 -->
-        <main class="flex-1 overflow-y-auto p-4 bg-gray-50/50" id="task-list-container">
-            <!-- 자바스크립트로 동적 렌더링 될 영역 -->
-        </main>
-
-        <!-- 푸터 영역: 새 할 일 추가 (shrink-0 적용 및 안전영역 패딩 추가) -->
-        <footer class="shrink-0 p-3 sm:p-4 border-t border-gray-100 bg-white safe-area-pb">
+        <!-- 새 할 일 추가 입력창을 헤더와 목록 사이로 배치 -->
+        <div class="shrink-0 bg-gray-50 p-3 border-b border-gray-100">
             <form id="add-task-form" class="flex gap-2">
-                <select id="new-task-priority" class="shrink-0 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg px-2 sm:px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gray-800 focus:border-gray-800">
+                <select id="new-task-priority" class="shrink-0 bg-white border border-gray-200 text-gray-700 rounded-lg px-2 sm:px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gray-800">
                     <option value="1">1순위</option>
                     <option value="2">2순위</option>
                     <option value="3">3순위</option>
                 </select>
-                <!-- 좁은 화면에서도 찌그러지지 않도록 min-w-0 적용 -->
-                <input type="text" id="new-task-input" placeholder="새로운 할 일..." class="flex-1 min-w-0 bg-gray-50 border border-gray-200 text-gray-800 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-800 focus:border-gray-800" required>
-                <!-- 버튼을 정사각형으로 고정 -->
-                <button type="submit" class="shrink-0 bg-gray-800 text-white w-10 h-10 sm:w-11 sm:h-11 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center">
+                <input type="text" id="new-task-input" placeholder="새로운 할 일..." class="flex-1 min-w-0 bg-white border border-gray-200 text-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gray-800" required>
+                <button type="submit" class="shrink-0 bg-gray-800 text-white w-10 h-10 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             </form>
+        </div>
+
+        <!-- 메인 목록 영역 -->
+        <main class="flex-1 overflow-y-auto p-4 bg-gray-50/50" id="task-list-container">
+            <!-- 자바스크립트로 동적 렌더링 -->
+        </main>
+
+        <!-- 하단 영역 -->
+        <footer class="shrink-0 p-2 border-t border-gray-100 bg-white safe-area-pb text-center text-xs text-gray-400">
+            매일 자정에 체크리스트가 초기화됩니다.
         </footer>
     </div>
 
-    <!-- 내용 및 순위 수정 모달 (숨김 처리) -->
+    <!-- 내용 및 순위 수정 모달 -->
     <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50 backdrop-blur-sm">
         <div class="bg-white p-6 rounded-xl shadow-xl w-11/12 max-w-sm border border-gray-100">
             <h3 class="text-lg font-bold mb-4 text-gray-900">할 일 수정</h3>
@@ -187,22 +208,43 @@
         </div>
     </div>
 
+    <!-- 날짜별 통계 및 그래프 모달 -->
+    <div id="stats-modal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl shadow-xl w-11/12 max-w-md border border-gray-100 flex flex-col max-h-[80dvh]">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900"><i class="fa-solid fa-chart-simple text-gray-700 mr-2"></i>최근 날짜별 달성률</h3>
+                <button id="btn-close-stats" class="text-gray-400 hover:text-gray-700 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="text-xs text-gray-500 mb-3">최근 기록된 날짜별 달성 퍼센트 그래프입니다.</div>
+            
+            <!-- 그래프 리스트 영역 -->
+            <div id="stats-container" class="flex-1 overflow-y-auto space-y-3 pr-1">
+                <!-- 동적 생성 -->
+            </div>
+
+            <div class="mt-5 pt-3 border-t border-gray-100 flex justify-end">
+                <button id="btn-close-stats-bottom" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors">확인</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // 초기 데이터 (로컬 스토리지에 없을 경우 사용)
         const defaultTasks = [
-            { id: 't1', text: '영양제', priority: 1, completed: false },
-            { id: 't2', text: '물 2L', priority: 1, completed: true },
-            { id: 't3', text: '운동 30분', priority: 1, completed: false },
-            { id: 't4', text: '가계부', priority: 1, completed: true },
-            { id: 't5', text: '독서', priority: 2, completed: true },
-            { id: 't6', text: '영어', priority: 2, completed: true },
-            { id: 't7', text: '블로그', priority: 2, completed: false },
-            { id: 't8', text: '방 청소', priority: 3, completed: false },
-            { id: 't9', text: '빨래', priority: 3, completed: false },
-            { id: 't10', text: '스트레칭', priority: 3, completed: true },
+            { id: 't1', text: '영양제', priority: 1, completed: false, pinned: false },
+            { id: 't2', text: '물 2L', priority: 1, completed: true, pinned: false },
+            { id: 't3', text: '운동 30분', priority: 1, completed: false, pinned: false },
+            { id: 't4', text: '가계부', priority: 1, completed: true, pinned: false },
+            { id: 't5', text: '독서', priority: 2, completed: true, pinned: false },
+            { id: 't6', text: '영어', priority: 2, completed: true, pinned: false },
+            { id: 't7', text: '블로그', priority: 2, completed: false, pinned: false },
+            { id: 't8', text: '방 청소', priority: 3, completed: false, pinned: false },
+            { id: 't9', text: '빨래', priority: 3, completed: false, pinned: false },
+            { id: 't10', text: '스트레칭', priority: 3, completed: true, pinned: false },
         ];
 
         let tasks = [];
+        let historyData = {}; 
         let lastResetDate = '';
 
         // DOM 요소
@@ -215,7 +257,7 @@
         const newTaskInput = document.getElementById('new-task-input');
         const newTaskPriority = document.getElementById('new-task-priority');
         
-        // 모달 요소
+        // 모달 요소들
         const editModal = document.getElementById('edit-modal');
         const editTaskId = document.getElementById('edit-task-id');
         const editTaskText = document.getElementById('edit-task-text');
@@ -223,7 +265,12 @@
         const btnCancelEdit = document.getElementById('btn-cancel-edit');
         const btnSaveEdit = document.getElementById('btn-save-edit');
 
-        // 초기화 함수
+        const statsModal = document.getElementById('stats-modal');
+        const statsContainer = document.getElementById('stats-container');
+        const btnOpenStats = document.getElementById('btn-open-stats');
+        const btnCloseStats = document.getElementById('btn-close-stats');
+        const btnCloseStatsBottom = document.getElementById('btn-close-stats-bottom');
+
         function init() {
             loadData();
             checkDailyReset();
@@ -233,7 +280,6 @@
             setupEventListeners();
         }
 
-        // 날짜 표시 함수
         function updateDateDisplay() {
             const dateEl = document.getElementById('current-date');
             const now = new Date();
@@ -241,58 +287,70 @@
             dateEl.textContent = now.toLocaleDateString('ko-KR', options);
         }
 
-        // 로컬 스토리지에서 데이터 불러오기
         function loadData() {
             const savedTasks = localStorage.getItem('checklist_tasks');
             const savedDate = localStorage.getItem('checklist_last_reset');
+            const savedHistory = localStorage.getItem('checklist_history');
             
             if (savedTasks) {
                 tasks = JSON.parse(savedTasks);
+                // 기존 데이터에 pinned 속성이 없을 경우 기본값 부여
+                tasks.forEach(t => { if (t.pinned === undefined) t.pinned = false; });
             } else {
                 tasks = [...defaultTasks];
                 saveData();
             }
 
+            if (savedHistory) {
+                historyData = JSON.parse(savedHistory);
+            }
+
+            const today = getTodayDateString();
             if (savedDate) {
                 lastResetDate = savedDate;
             } else {
-                lastResetDate = getTodayDateString();
+                lastResetDate = today;
                 localStorage.setItem('checklist_last_reset', lastResetDate);
             }
         }
 
-        // 데이터 저장하기
         function saveData() {
             localStorage.setItem('checklist_tasks', JSON.stringify(tasks));
+            localStorage.setItem('checklist_history', JSON.stringify(historyData));
         }
 
-        // 오늘 날짜 문자열 가져오기 (YYYY-MM-DD)
         function getTodayDateString() {
             const today = new Date();
-            // 로컬 시간대 기준으로 날짜 문자열 생성 (YYYY-MM-DD 형식)
             const offset = today.getTimezoneOffset() * 60000;
-            const localISOTime = (new Date(today - offset)).toISOString().split('T')[0];
-            return localISOTime;
+            return (new Date(today - offset)).toISOString().split('T')[0];
         }
 
-        // 매일 자정 리셋 체크
+        function recordTodayProgress() {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+            
+            const today = getTodayDateString();
+            historyData[today] = percent;
+            localStorage.setItem('checklist_history', JSON.stringify(historyData));
+        }
+
         function checkDailyReset() {
             const today = getTodayDateString();
             
-            // 저장된 마지막 리셋 날짜와 오늘 날짜가 다르면 초기화
             if (lastResetDate !== today) {
+                recordTodayProgress();
+
                 tasks.forEach(task => {
-                    task.completed = false; // 모든 체크 해제
+                    task.completed = false; 
                 });
                 
                 lastResetDate = today;
                 localStorage.setItem('checklist_last_reset', lastResetDate);
                 saveData();
-                console.log('하루가 지나 체크리스트가 초기화되었습니다.');
             }
         }
 
-        // 우선순위에 따른 별 표시 함수 (심플 톤)
         function getPriorityStars(priority) {
             switch(parseInt(priority)) {
                 case 1: return '<span class="text-gray-800 text-sm tracking-widest">★★★★★</span> <span class="font-bold text-gray-900 ml-2">1순위</span>';
@@ -302,16 +360,16 @@
             }
         }
 
-        // 할 일 목록 렌더링
         function renderTasks() {
             container.innerHTML = '';
 
-            // 1, 2, 3 순위별로 그룹화
             for (let i = 1; i <= 3; i++) {
-                const groupTasks = tasks.filter(task => parseInt(task.priority) === i);
+                // 고정된(Pinned) 항목이 위로 오도록 정렬
+                const groupTasks = tasks
+                    .filter(task => parseInt(task.priority) === i)
+                    .sort((a, b) => (b.pinned === true) - (a.pinned === true));
                 
                 if (groupTasks.length > 0) {
-                    // 그룹 헤더 생성
                     const groupDiv = document.createElement('div');
                     groupDiv.className = 'mb-6 last:mb-2';
                     
@@ -323,18 +381,19 @@
                     const taskList = document.createElement('ul');
                     taskList.className = 'space-y-2';
 
-                    // 각 그룹 내의 할 일 아이템 생성
                     groupTasks.forEach(task => {
                         const li = document.createElement('li');
-                        li.className = `task-item bg-white border border-gray-100 p-3 rounded-xl shadow-sm flex justify-between items-center transition-all hover:shadow-md ${task.completed ? 'completed bg-gray-50/80 opacity-70' : ''}`;
+                        li.className = `task-item bg-white border ${task.pinned ? 'border-gray-400 shadow-sm bg-gray-50/50' : 'border-gray-100'} p-3 rounded-xl shadow-sm flex justify-between items-center transition-all hover:shadow-md ${task.completed ? 'completed bg-gray-50/80 opacity-70' : ''}`;
                         
-                        // 아이템 내부 HTML 구조
                         li.innerHTML = `
-                            <label class="flex items-center gap-3 cursor-pointer flex-1">
+                            <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
                                 <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask('${task.id}')">
-                                <span class="task-text text-gray-800 text-[15px] font-medium">${task.text}</span>
+                                <span class="task-text text-gray-800 text-[15px] font-medium truncate">${task.text}</span>
                             </label>
-                            <div class="flex gap-1">
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button onclick="togglePin('${task.id}')" class="p-2 transition-colors ${task.pinned ? 'text-gray-900 font-bold' : 'text-gray-300 hover:text-gray-600'}">
+                                    <i class="fa-solid fa-thumbtack" title="${task.pinned ? '고정 해제' : '상단 고정'}"></i>
+                                </button>
                                 <button onclick="openEditModal('${task.id}', '${task.text.replace(/'/g, "\\'")}', ${task.priority})" class="text-gray-400 hover:text-gray-800 p-2 transition-colors">
                                     <i class="fa-solid fa-pen" title="수정"></i>
                                 </button>
@@ -351,10 +410,9 @@
                 }
             }
             
-            // 등록된 할 일이 없을 경우
             if (tasks.length === 0) {
                 container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60">
+                    <div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 py-10">
                         <i class="fa-solid fa-list-check text-5xl mb-4"></i>
                         <p>새로운 할 일을 추가해보세요!</p>
                     </div>
@@ -362,18 +420,25 @@
             }
         }
 
-        // 할 일 체크 토글
         window.toggleTask = function(id) {
             const task = tasks.find(t => t.id === id);
             if (task) {
                 task.completed = !task.completed;
                 saveData();
-                renderTasks(); // 클래스 변경을 위해 다시 렌더링 (또는 DOM 직접 조작 가능)
+                renderTasks();
                 updateProgress();
             }
         };
 
-        // 진행률 업데이트
+        window.togglePin = function(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.pinned = !task.pinned;
+                saveData();
+                renderTasks();
+            }
+        };
+
         function updateProgress() {
             const total = tasks.length;
             const completed = tasks.filter(t => t.completed).length;
@@ -383,15 +448,13 @@
                 percent = Math.round((completed / total) * 100);
             }
 
-            // 숫자 업데이트 애니메이션 효과 없이 즉시 반영
             totalCountEl.textContent = total;
             completedCountEl.textContent = completed;
             progressPercentEl.textContent = `${percent}%`;
-            
-            // 바 애니메이션 반영
             progressBarEl.style.width = `${percent}%`;
 
-            // 100% 완료 시 색상 변경 로직 (심플한 톤에 맞춰서)
+            recordTodayProgress();
+
             if (percent === 100 && total > 0) {
                 progressPercentEl.classList.remove('text-gray-900');
                 progressPercentEl.classList.add('text-green-600');
@@ -405,7 +468,6 @@
             }
         }
 
-        // 할 일 삭제
         window.deleteTask = function(id) {
             tasks = tasks.filter(t => t.id !== id);
             saveData();
@@ -413,9 +475,35 @@
             updateProgress();
         };
 
-        // 이벤트 리스너 설정
+        function renderStatsModal() {
+            statsContainer.innerHTML = '';
+            const sortedDates = Object.keys(historyData).sort().reverse();
+            
+            if (sortedDates.length === 0) {
+                statsContainer.innerHTML = '<div class="text-center text-gray-400 py-8">저장된 통계 기록이 없습니다.</div>';
+                return;
+            }
+
+            sortedDates.forEach(dateStr => {
+                const percent = historyData[dateStr];
+                
+                const row = document.createElement('div');
+                row.className = 'bg-gray-50 p-3 rounded-xl border border-gray-100';
+                
+                row.innerHTML = `
+                    <div class="flex justify-between items-center mb-1.5 text-sm">
+                        <span class="font-medium text-gray-700">${dateStr}</span>
+                        <span class="font-bold text-gray-900">${percent}%</span>
+                    </div>
+                    <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-gray-800 rounded-full transition-all duration-300" style="width: ${percent}%;"></div>
+                    </div>
+                `;
+                statsContainer.appendChild(row);
+            });
+        }
+
         function setupEventListeners() {
-            // 폼 제출 (새 할 일 추가)
             addForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
@@ -424,10 +512,11 @@
                 
                 if (text) {
                     const newTask = {
-                        id: 't_' + Date.now(), // 고유 ID 생성
+                        id: 't_' + Date.now(),
                         text: text,
                         priority: priority,
-                        completed: false
+                        completed: false,
+                        pinned: false
                     };
                     
                     tasks.push(newTask);
@@ -435,24 +524,13 @@
                     renderTasks();
                     updateProgress();
                     
-                    newTaskInput.value = ''; // 입력창 초기화
-                    
-                    // 스크롤 맨 아래로 이동
-                    setTimeout(() => {
-                        container.scrollTop = container.scrollHeight;
-                    }, 100);
+                    newTaskInput.value = '';
                 }
             });
 
-            // 모달 닫기 이벤트
-            btnCancelEdit.addEventListener('click', closeEditModal);
-            
-            // 모달 배경 클릭시 닫기
-            editModal.addEventListener('click', function(e) {
-                if (e.target === editModal) closeEditModal();
-            });
+            btnCancelEdit.addEventListener('click', () => editModal.classList.add('hidden'));
+            editModal.addEventListener('click', (e) => { if (e.target === editModal) editModal.classList.add('hidden'); });
 
-            // 수정 저장 (내용 및 순위)
             btnSaveEdit.addEventListener('click', function() {
                 const id = editTaskId.value;
                 const newText = editTaskText.value.trim();
@@ -460,32 +538,34 @@
                 
                 if (!newText) {
                     editTaskText.focus();
-                    return; // 텍스트가 비어있으면 저장하지 않음
+                    return;
                 }
                 
                 const task = tasks.find(t => t.id === id);
                 if (task) {
-                    let isChanged = false;
-                    
-                    if (task.text !== newText) {
-                        task.text = newText;
-                        isChanged = true;
-                    }
-                    if (task.priority !== newPriority) {
-                        task.priority = newPriority;
-                        isChanged = true;
-                    }
-                    
-                    if (isChanged) {
-                        saveData();
-                        renderTasks();
-                    }
+                    task.text = newText;
+                    task.priority = newPriority;
+                    saveData();
+                    renderTasks();
                 }
-                
-                closeEditModal();
+                editModal.classList.add('hidden');
             });
 
-            // 페이지가 보여질 때마다 날짜 변경(리셋) 체크 (예: 백그라운드에서 돌아왔을 때)
+            btnOpenStats.addEventListener('click', () => {
+                renderStatsModal();
+                statsModal.classList.remove('hidden');
+                statsModal.classList.add('flex');
+            });
+
+            const closeStats = () => {
+                statsModal.classList.add('hidden');
+                statsModal.classList.remove('flex');
+            };
+
+            btnCloseStats.addEventListener('click', closeStats);
+            btnCloseStatsBottom.addEventListener('click', closeStats);
+            statsModal.addEventListener('click', (e) => { if (e.target === statsModal) closeStats(); });
+
             document.addEventListener('visibilitychange', function() {
                 if (!document.hidden) {
                     checkDailyReset();
@@ -495,7 +575,6 @@
             });
         }
 
-        // 모달 열기 함수 (전역)
         window.openEditModal = function(id, text, currentPriority) {
             editTaskId.value = id;
             editTaskText.value = text;
@@ -503,18 +582,9 @@
             
             editModal.classList.remove('hidden');
             editModal.classList.add('flex');
-            
-            // 모달 열릴 때 텍스트 인풋에 포커스
             setTimeout(() => editTaskText.focus(), 100);
         };
 
-        // 모달 닫기 함수
-        function closeEditModal() {
-            editModal.classList.add('hidden');
-            editModal.classList.remove('flex');
-        }
-
-        // 앱 시작
         init();
     </script>
 </body>
