@@ -109,9 +109,10 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-gray-100 text-gray-800 h-[100dvh] flex flex-col items-center justify-center p-2 sm:p-4">
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 w-full max-w-md overflow-hidden flex flex-col" style="max-height: 90vh;">
+    <!-- 모바일 환경 최적화를 위해 높이 제한을 유동적으로 변경 (h-[95dvh]) -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 w-full max-w-md overflow-hidden flex flex-col h-full max-h-[95dvh] sm:max-h-[90dvh]">
         
         <!-- 헤더 영역: 날짜, 제목 및 진행률 -->
         <header class="bg-white p-6 pb-4 border-b border-gray-100 relative">
@@ -157,12 +158,16 @@
         </footer>
     </div>
 
-    <!-- 순위 변경 모달 (숨김 처리) -->
+    <!-- 내용 및 순위 수정 모달 (숨김 처리) -->
     <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50 backdrop-blur-sm">
         <div class="bg-white p-6 rounded-xl shadow-xl w-11/12 max-w-sm border border-gray-100">
-            <h3 class="text-lg font-bold mb-4 text-gray-900">순위 변경</h3>
+            <h3 class="text-lg font-bold mb-4 text-gray-900">할 일 수정</h3>
             <input type="hidden" id="edit-task-id">
-            <p id="edit-task-name" class="mb-4 text-gray-600 font-medium truncate"></p>
+            
+            <label class="block text-sm font-medium text-gray-700 mb-1">할 일 내용</label>
+            <input type="text" id="edit-task-text" class="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-1 focus:ring-gray-800" required>
+            
+            <label class="block text-sm font-medium text-gray-700 mb-1">우선순위</label>
             <select id="edit-task-priority" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 mb-6 focus:outline-none focus:ring-1 focus:ring-gray-800">
                 <option value="1">★★★★★ 1순위</option>
                 <option value="2">★★★★ 2순위</option>
@@ -206,7 +211,7 @@
         // 모달 요소
         const editModal = document.getElementById('edit-modal');
         const editTaskId = document.getElementById('edit-task-id');
-        const editTaskName = document.getElementById('edit-task-name');
+        const editTaskText = document.getElementById('edit-task-text');
         const editTaskPriority = document.getElementById('edit-task-priority');
         const btnCancelEdit = document.getElementById('btn-cancel-edit');
         const btnSaveEdit = document.getElementById('btn-save-edit');
@@ -323,8 +328,8 @@
                                 <span class="task-text text-gray-800 text-[15px] font-medium">${task.text}</span>
                             </label>
                             <div class="flex gap-1">
-                                <button onclick="openEditModal('${task.id}', '${task.text}', ${task.priority})" class="text-gray-400 hover:text-gray-800 p-2 transition-colors">
-                                    <i class="fa-solid fa-arrow-right-arrow-left" title="순위 변경"></i>
+                                <button onclick="openEditModal('${task.id}', '${task.text.replace(/'/g, "\\'")}', ${task.priority})" class="text-gray-400 hover:text-gray-800 p-2 transition-colors">
+                                    <i class="fa-solid fa-pen" title="수정"></i>
                                 </button>
                                 <button onclick="deleteTask('${task.id}')" class="text-gray-400 hover:text-red-500 p-2 transition-colors">
                                     <i class="fa-regular fa-trash-can" title="삭제"></i>
@@ -440,16 +445,34 @@
                 if (e.target === editModal) closeEditModal();
             });
 
-            // 순위 변경 저장
+            // 수정 저장 (내용 및 순위)
             btnSaveEdit.addEventListener('click', function() {
                 const id = editTaskId.value;
+                const newText = editTaskText.value.trim();
                 const newPriority = parseInt(editTaskPriority.value);
                 
+                if (!newText) {
+                    editTaskText.focus();
+                    return; // 텍스트가 비어있으면 저장하지 않음
+                }
+                
                 const task = tasks.find(t => t.id === id);
-                if (task && task.priority !== newPriority) {
-                    task.priority = newPriority;
-                    saveData();
-                    renderTasks();
+                if (task) {
+                    let isChanged = false;
+                    
+                    if (task.text !== newText) {
+                        task.text = newText;
+                        isChanged = true;
+                    }
+                    if (task.priority !== newPriority) {
+                        task.priority = newPriority;
+                        isChanged = true;
+                    }
+                    
+                    if (isChanged) {
+                        saveData();
+                        renderTasks();
+                    }
                 }
                 
                 closeEditModal();
@@ -468,11 +491,14 @@
         // 모달 열기 함수 (전역)
         window.openEditModal = function(id, text, currentPriority) {
             editTaskId.value = id;
-            editTaskName.textContent = text;
+            editTaskText.value = text;
             editTaskPriority.value = currentPriority;
             
             editModal.classList.remove('hidden');
             editModal.classList.add('flex');
+            
+            // 모달 열릴 때 텍스트 인풋에 포커스
+            setTimeout(() => editTaskText.focus(), 100);
         };
 
         // 모달 닫기 함수
